@@ -1,0 +1,86 @@
+// Prisma schema for the Mantle Tokenized Equities Intelligence Agent.
+// Stores snapshots, asset/pool time series, trades, opportunities and AI summaries.
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "sqlite"
+  url      = env("DATABASE_URL")
+}
+
+model Snapshot {
+  id            Int      @id @default(autoincrement())
+  ts            DateTime
+  totalTvl      Float
+  totalVolume   Float
+  assetCount    Int
+  poolCount     Int
+  concentration Float
+  payload       String
+
+  @@index([ts])
+}
+
+model AssetSeries {
+  id              Int      @id @default(autoincrement())
+  ts              DateTime
+  symbol          String
+  address         String
+  tvlUsd          Float
+  volume24h       Float
+  price           Float
+  premium         Float
+  healthScore     Float
+  liquidityScore  Float
+  growthScore     Float
+
+  @@index([ts])
+}
+
+model PoolSeries {
+  id            Int      @id @default(autoincrement())
+  ts            DateTime
+  address       String
+  assetSymbol   String
+  tvlUsd        Float
+  volume24h     Float
+  fees24h       Float
+  apr           Float
+  volumeToTvl   Float
+  healthScore   Float
+
+  @@index([ts])
+}
+
+model Trade {
+  id           Int      @id @default(autoincrement())
+  ts           DateTime
+  txHash       String   @unique
+  assetSymbol  String?
+  poolAddress  String?
+  amountUsd    Float
+  price        Float
+  kind         String
+
+  @@index([ts])
+}
+
+model OpportunityLog {
+  id        Int      @id @default(autoincrement())
+  ts        DateTime
+  kind      String
+  title     String
+  payload   String
+}
+
+model AiSummary {
+  id        Int      @id @default(autoincrement())
+  ts        DateTime
+  kind      String
+  title     String
+  body      String
+  bullets   String
+  evidence  String
+}
