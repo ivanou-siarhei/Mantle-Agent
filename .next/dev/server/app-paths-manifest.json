@@ -1,0 +1,15 @@
+{
+  "/api/ask/route": "app/api/ask/route.js",
+  "/api/assets/route": "app/api/assets/route.js",
+  "/api/digest/route": "app/api/digest/route.js",
+  "/api/health/route": "app/api/health/route.js",
+  "/api/insights/daily-brief/route": "app/api/insights/daily-brief/route.js",
+  "/api/insights/health/route": "app/api/insights/health/route.js",
+  "/api/insights/opportunities/route": "app/api/insights/opportunities/route.js",
+  "/api/narratives/route": "app/api/narratives/route.js",
+  "/api/opportunities/route": "app/api/opportunities/route.js",
+  "/api/overview/route": "app/api/overview/route.js",
+  "/api/pools/route": "app/api/pools/route.js",
+  "/api/snapshots/route": "app/api/snapshots/route.js",
+  "/page": "app/page.js"
+}

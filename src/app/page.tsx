@@ -68,6 +68,10 @@ export default function Home() {
   const [topPools, setTopPools] = useState<Pool[]>([]);
   const [allAssets, setAllAssets] = useState<Asset[]>([]);
   const [allPools, setAllPools] = useState<Pool[]>([]);
+  const [poolSource, setPoolSource] = useState<string | null>(null);
+  const [poolLive, setPoolLive] = useState<boolean>(false);
+  const [llmAvailable, setLlmAvailable] = useState<boolean>(false);
+  const [llmLabel, setLlmLabel] = useState<string | null>(null);
   const [opps, setOpps] = useState<Opportunity[]>([]);
   const [oppCounts, setOppCounts] = useState<Record<string, number>>({});
   const [snapshots, setSnapshots] = useState<SnapshotRow[]>([]);
@@ -99,6 +103,13 @@ export default function Home() {
     setTopPools(o.topPools);
     setOppCounts(o.opportunityCounts);
     setLastRefreshed(o.lastRefreshed);
+    try {
+      const h = await backend.health();
+      setLlmAvailable(Boolean(h.llmAvailable));
+      setLlmLabel(h.llmLabel ?? null);
+    } catch {
+      /* health is non-critical */
+    }
   }, []);
 
   const loadAll = useCallback(async () => {
@@ -112,6 +123,8 @@ export default function Home() {
     ]);
     setAllAssets(a.assets);
     setAllPools(p.pools);
+    setPoolSource(p.source ?? null);
+    setPoolLive(Boolean(p.live));
     setOpps(op.opportunities);
     setSnapshots(sn.snapshots);
     setNarratives(nr.narratives);
@@ -456,7 +469,10 @@ export default function Home() {
 
             <div className="rounded-xl border border-zinc-200 bg-white dark:border-zinc-800 dark:bg-zinc-900">
               <div className="flex items-center justify-between p-4">
-                <h3 className="text-sm font-semibold text-zinc-900 dark:text-zinc-100">All Assets ({allAssets.length})</h3>
+                <div>
+                  <h3 className="text-sm font-semibold text-zinc-900 dark:text-zinc-100">Tokenized Equities ({allAssets.length})</h3>
+                  <p className="mt-0.5 text-xs text-zinc-500 dark:text-zinc-400">Settled via Atomic RFQ (xChange) &mdash; issuer-direct quotes, not AMM pools. &ldquo;Depth&rdquo; is RFQ depth.</p>
+                </div>
               </div>
               <div className="overflow-x-auto">
                 <table className="w-full text-sm">
@@ -464,9 +480,10 @@ export default function Home() {
                     <tr>
                       <th className="px-4 py-2 text-left">#</th>
                       <th className="px-4 py-2 text-left">Asset</th>
-                      <th className="px-4 py-2 text-right">TVL</th>
+                      <th className="px-4 py-2 text-right">RFQ Depth</th>
                       <th className="px-4 py-2 text-right">Volume 24h</th>
                       <th className="px-4 py-2 text-right">Price</th>
+                      <th className="px-4 py-2 text-right">Spread</th>
                       <th className="px-4 py-2 text-right">Prem/Disc</th>
                       <th className="px-4 py-2 text-right">Liquidity</th>
                       <th className="px-4 py-2 text-right">Health</th>
@@ -483,6 +500,7 @@ export default function Home() {
                         <td className="px-4 py-2.5 text-right tabular-nums">{fmtUsd(a.tvlUsd, { compact: true })}</td>
                         <td className="px-4 py-2.5 text-right tabular-nums">{fmtUsd(a.volume24h, { compact: true })}</td>
                         <td className="px-4 py-2.5 text-right tabular-nums">${fmtNum(a.price, 2)}</td>
+                        <td className={`px-4 py-2.5 text-right tabular-nums ${(a.spreadBps ?? 0) > 50 ? "text-amber-600" : "text-zinc-500"}`}>{a.spreadBps != null ? `${a.spreadBps} bps` : "\u2014"}</td>
                         <td className={`px-4 py-2.5 text-right tabular-nums ${premiumColor(a.premiumDiscount)}`}>{fmtPct(a.premiumDiscount)}</td>
                         <td className="px-4 py-2.5">
                           <ScoreBar score={a.liquidityScore} />
@@ -498,7 +516,7 @@ export default function Home() {
             </div>
 
             <div className="rounded-xl border border-zinc-200 bg-white p-4 dark:border-zinc-800 dark:bg-zinc-900">
-              <h3 className="mb-3 text-sm font-semibold text-zinc-900 dark:text-zinc-100">TVL by Asset</h3>
+              <h3 className="mb-3 text-sm font-semibold text-zinc-900 dark:text-zinc-100">RFQ Depth by Equity</h3>
               <AssetBars assets={allAssets.slice(0, 10)} />
             </div>
           </TabsContent>
@@ -519,7 +537,27 @@ export default function Home() {
 
             <div className="rounded-xl border border-zinc-200 bg-white dark:border-zinc-800 dark:bg-zinc-900">
               <div className="flex items-center justify-between p-4">
-                <h3 className="text-sm font-semibold text-zinc-900 dark:text-zinc-100">All Pools ({allPools.length})</h3>
+                <div>
+                  <div className="flex items-center gap-2">
+                    <h3 className="text-sm font-semibold text-zinc-900 dark:text-zinc-100">Fluxion tokenized-equity pools ({allPools.length})</h3>
+                    <span
+                      className={`inline-flex items-center gap-1 rounded-full px-2 py-0.5 text-[10px] font-medium ${
+                        poolLive
+                          ? "bg-emerald-100 text-emerald-700 dark:bg-emerald-500/15 dark:text-emerald-400"
+                          : "bg-amber-100 text-amber-700 dark:bg-amber-500/15 dark:text-amber-400"
+                      }`}
+                      title={poolSource ?? undefined}
+                    >
+                      <span className={`h-1.5 w-1.5 rounded-full ${poolLive ? "bg-emerald-500" : "bg-amber-500"}`} />
+                      {poolLive ? "LIVE" : "SAMPLE"}
+                    </span>
+                  </div>
+                  <p className="mt-0.5 text-xs text-zinc-500 dark:text-zinc-400">
+                    {poolLive
+                      ? `Live TVL from DefiLlama — ${poolSource}`
+                      : "Offline sample data (live DefiLlama feed unavailable). Set USE_LIVE_DATA=true with a network connection for real Fluxion TVL."}
+                  </p>
+                </div>
               </div>
               <div className="overflow-x-auto">
                 <table className="w-full text-sm">
@@ -540,7 +578,7 @@ export default function Home() {
                       <tr key={p.address} className="border-t border-zinc-100 hover:bg-zinc-50 dark:border-zinc-800 dark:hover:bg-zinc-800/50">
                         <td className="px-4 py-2.5 tabular-nums text-zinc-400 dark:text-zinc-500">{i + 1}</td>
                         <td className="px-4 py-2.5">
-                          <div className="font-mono font-medium text-zinc-900 dark:text-zinc-100">{p.assetSymbol}/MNT</div>
+                          <div className="font-mono font-medium text-zinc-900 dark:text-zinc-100">{p.assetSymbol}</div>
                           <div className="text-xs text-zinc-500 dark:text-zinc-400">{shortAddr(p.address)}</div>
                         </td>
                         <td className="px-4 py-2.5 text-right tabular-nums">{fmtUsd(p.tvlUsd, { compact: true })}</td>
@@ -694,6 +732,17 @@ export default function Home() {
               <div className="mb-3 flex items-center gap-2">
                 <BrainCircuit className="h-4 w-4 text-zinc-500 dark:text-zinc-400" />
                 <h3 className="text-sm font-semibold text-zinc-900 dark:text-zinc-100">Ask Mantle</h3>
+                <span
+                  className={`inline-flex items-center gap-1 rounded-full px-2 py-0.5 text-[10px] font-medium ${
+                    llmAvailable
+                      ? "bg-violet-100 text-violet-700 dark:bg-violet-500/15 dark:text-violet-300"
+                      : "bg-zinc-100 text-zinc-600 dark:bg-zinc-800 dark:text-zinc-400"
+                  }`}
+                  title={llmLabel ?? undefined}
+                >
+                  <span className={`h-1.5 w-1.5 rounded-full ${llmAvailable ? "bg-violet-500" : "bg-zinc-400"}`} />
+                  {llmAvailable ? "LLM LIVE" : "MOCK LLM"}
+                </span>
                 <span className="ml-auto text-xs text-zinc-500 dark:text-zinc-400">Answers grounded in calculated metrics</span>
               </div>
 
@@ -806,7 +855,7 @@ function PoolRow({ pool, rank }: { pool: Pool; rank: number }) {
       <div className="flex items-center gap-3 min-w-0">
         <span className="text-xs tabular-nums text-zinc-400 dark:text-zinc-500 w-4">{rank}</span>
         <div className="min-w-0">
-          <div className="font-mono text-sm font-medium text-zinc-900 dark:text-zinc-100">{pool.assetSymbol}/MNT</div>
+          <div className="font-mono text-sm font-medium text-zinc-900 dark:text-zinc-100">{pool.assetSymbol}</div>
           <div className="text-xs text-zinc-500 dark:text-zinc-400">{shortAddr(pool.address)}</div>
         </div>
       </div>

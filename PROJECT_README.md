@@ -170,3 +170,22 @@ concept and wires the LLM that was previously only documented:
   talks only to the Next.js API routes.
 - Pruned unused dependencies from `package.json` (dnd-kit, mdxeditor, next-auth,
   next-intl, react-query, framer-motion, zustand, z-ai-web-dev-sdk).
+
+### Added — live data (DefiLlama LiveAdapter, no key)
+- `src/lib/intel/live.ts` — pulls **real Fluxion ecosystem metrics** from DefiLlama's
+  free, key-less public API (slug `fluxion-network`): protocol TVL, 24h DEX volume
+  and fees. The refresh pipeline scales the modeled per-asset distribution onto
+  these real totals, so headline **TVL / 24h volume are live** while the per-asset
+  breakdown stays illustrative. The digest/footer source flips to
+  `Fluxion via DefiLlama (live)` whenever live data is available.
+- **Fail-safe:** any network/API error makes it fall back to pure synthetic with
+  zero breakage (`SyntheticAdapter (sample data)`).
+- Env vars (all optional — live is on by default, no key needed):
+  ```bash
+  USE_LIVE_DATA=false                        # force synthetic / offline mode
+  DEFILLAMA_BASE_URL=https://api.llama.fi    # override DefiLlama base URL
+  FLUXION_DEFILLAMA_SLUG=fluxion-network     # override the protocol slug
+  ```
+- Roadmap toward per-asset live data: a Fluxion subgraph / on-chain pool reads
+  adapter (per-pool depth, spread, premium/discount) + reference oracle — drops
+  in behind the same `liveScaleFactors` seam without touching the analysis layer.

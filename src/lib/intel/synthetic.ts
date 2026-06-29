@@ -147,6 +147,16 @@ export function discoverAssets(): { assets: Asset[]; report: DiscoveryReport } {
     const price = drift(refPrice, 0.015, session);
     const premiumDiscount = session.gauss(0, 0.6);
 
+    // RFQ bid/ask spread (bps): thinner RFQ depth → wider spread.
+    // tvlUsd here represents the RFQ-quoted depth available via the market maker.
+    const depthFrac = Math.max(
+      0,
+      Math.min(1, (Math.log10(1 + tvl) - Math.log10(180_000)) / (Math.log10(4_500_000) - Math.log10(180_000)))
+    );
+    const spreadBps = Math.round(
+      Math.max(6, Math.min(120, 14 + (1 - depthFrac) * 70 + session.gauss(0, 4)))
+    );
+
     const address = "0x" + sha256hex(`${symbol}|mantle`, 40);
 
     assets.push({
@@ -164,6 +174,10 @@ export function discoverAssets(): { assets: Asset[]; report: DiscoveryReport } {
       healthScore: 0,
       growthScore: 0,
       discoveredAt: now,
+      // xStocks equities settle via Atomic RFQ (xChange) — issuer-direct quotes,
+      // not AMM pools. See README § "Tokenized equities are RFQ, not pools".
+      venue: "Atomic RFQ (xChange)",
+      spreadBps,
     });
   }
 
@@ -180,36 +194,62 @@ export function discoverAssets(): { assets: Asset[]; report: DiscoveryReport } {
   };
 }
 
-export function discoverPools(assets: Asset[]): { pools: Pool[]; report: DiscoveryReport } {
+// Synthetic FALLBACK pools — realistic *generic* Fluxion AMM pairs (regular
+// crypto pools, NOT tokenized equities). Used only when the live DefiLlama
+// yields feed is unreachable. The TVL distribution roughly mirrors the real
+// Fluxion tokenized-equity pools (~$2.2M). The Pools lens tracks ONLY
+// tokenized-equity AMM pools (each xStock quoted in USDC); crypto-only pairs
+// are intentionally excluded to keep the agent focused on tokenized equities.
+const SEED_POOLS: Array<[string, string, number, number]> = [
+  // [token0, token1, baseTvlUsd, baseApyPct] — tokenized equity quoted in USDC.
+  // TVLs anchored to real Fluxion scale (NVDAx-USDC ≈ $105K observed on-DEX).
+  // These are SAMPLE numbers for offline mode; live mode pulls exact TVL from
+  // DefiLlama. Sizes are kept in the realistic ~$10K–$110K per-pool range.
+  ["NVDAx", "USDC", 105_180, 9.2],
+  ["TSLAx", "USDC", 96_000, 7.8],
+  ["AAPLx", "USDC", 78_000, 6.4],
+  ["METAx", "USDC", 61_000, 5.5],
+  ["MSFTx", "USDC", 54_000, 4.9],
+  ["GOOGLx", "USDC", 43_000, 5.1],
+  ["AMZNx", "USDC", 37_000, 4.3],
+  ["COINx", "USDC", 31_000, 8.7],
+  ["MSTRx", "USDC", 22_000, 11.2],
+  ["AMDx", "USDC", 14_000, 6.0],
+];
+
+export function discoverSyntheticPools(): { pools: Pool[]; report: DiscoveryReport } {
   const now = new Date().toISOString();
   const session = sessionRng();
   const pools: Pool[] = [];
+  const feeTier = 0.003;
 
-  for (const asset of assets) {
-    const rng = poolRng(asset.address);
+  for (const [token0, token1, baseTvl, baseApy] of SEED_POOLS) {
+    const symbol = `${token0}-${token1}`;
+    const address = "0x" + sha256hex(`${symbol}|pool|fluxion`, 40);
+    const rng = poolRng(address);
 
-    const poolTvl = drift(asset.tvlUsd * rng.uniform(0.4, 0.85), 0.03, session);
-    const poolVol = drift(asset.volume24h * rng.uniform(0.55, 1.05), 0.08, session);
-
-    const feeTier = rng.choice([0.0005, 0.001, 0.003]);
-    const fees24h = poolVol * feeTier;
-    const apr = poolTvl > 0 ? (fees24h * 365) / poolTvl * 100 : 0;
-
-    const address = "0x" + sha256hex(`${asset.symbol}|pool|fluxion`, 40);
+    const tvlUsd = drift(baseTvl * rng.uniform(0.9, 1.1), 0.03, session);
+    // Derive fees from the intended APY so analytics' recomputed APR is stable.
+    const apyDrift = Math.max(0, drift(baseApy, 0.05, session));
+    const fees24h = (tvlUsd * (apyDrift / 100)) / 365;
+    const volume24h = fees24h / feeTier;
+    const apr = tvlUsd > 0 ? (fees24h * 365) / tvlUsd * 100 : 0;
 
     pools.push({
       address,
-      assetSymbol: asset.symbol,
-      token0: asset.address,
-      token1: STABLE_SYMBOL,
-      tvlUsd: round(poolTvl, 2),
-      volume24h: round(poolVol, 2),
+      assetSymbol: symbol,
+      token0,
+      token1,
+      tvlUsd: round(tvlUsd, 2),
+      volume24h: round(volume24h, 2),
       fees24h: round(fees24h, 2),
       apr: round(apr, 2),
-      volumeToTvl: poolTvl > 0 ? round(poolVol / poolTvl, 4) : 0,
+      volumeToTvl: tvlUsd > 0 ? round(volume24h / tvlUsd, 4) : 0,
       healthScore: 0,
       feeEfficiency: 0,
       discoveredAt: now,
+      source: "SyntheticAdapter (sample data)",
+      live: false,
     });
   }
 

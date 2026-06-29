@@ -9,9 +9,13 @@ export async function GET(request: Request) {
     await ensureLoaded();
     const url = new URL(request.url);
     const limit = Math.min(200, Math.max(1, parseInt(url.searchParams.get("limit") ?? "50", 10)));
+    const source = cache.poolSourceLabel ?? cache.sourceLabel ?? "";
     return NextResponse.json({
       pools: cache.pools.slice(0, limit),
       total: cache.pools.length,
+      source,
+      // Live when the pool source is the DefiLlama adapter (not the sample fallback).
+      live: source.length > 0 && !/sample data/i.test(source),
     });
   } catch (e: unknown) {
     return NextResponse.json(

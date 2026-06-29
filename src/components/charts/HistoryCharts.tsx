@@ -14,6 +14,7 @@ import {
 
 import { fmtUsd } from "@/lib/format";
 import type { SnapshotRow } from "@/lib/backend";
+import { ChartTooltipBox, type ChartTooltipBoxProps } from "./ChartTooltip";
 
 /**
  * Reads the effective theme from <html class="dark"> — set by next-themes.
@@ -22,17 +23,6 @@ import type { SnapshotRow } from "@/lib/backend";
 function isDarkMode(): boolean {
   if (typeof document === "undefined") return false;
   return document.documentElement.classList.contains("dark");
-}
-
-function tooltipStyle(): React.CSSProperties {
-  const dark = isDarkMode();
-  return {
-    borderRadius: 8,
-    border: `1px solid ${dark ? "#3f3f46" : "#e4e4e7"}`,
-    background: dark ? "#18181b" : "#ffffff",
-    color: dark ? "#f4f4f5" : "#18181b",
-    fontSize: 12,
-  };
 }
 
 function axisStroke(): string {
@@ -86,12 +76,16 @@ export function TvlHistoryChart({ snapshots, height = 220 }: TvlHistoryChartProp
             tickFormatter={(v) => fmtUsd(Number(v), { compact: true })}
           />
           <Tooltip
-            labelFormatter={(v) => new Date(String(v)).toLocaleString()}
-            formatter={(v: number, name: string) => [
-              fmtUsd(v, { compact: true }),
-              name === "tvl" ? "TVL" : "Volume",
-            ]}
-            contentStyle={tooltipStyle()}
+            content={(props) => (
+              <ChartTooltipBox
+                {...(props as unknown as ChartTooltipBoxProps)}
+                labelFormatter={(l) => new Date(String(l)).toLocaleString()}
+                valueFormatter={(v, name) => [
+                  fmtUsd(v, { compact: true }),
+                  name === "tvl" ? "TVL" : "Volume",
+                ]}
+              />
+            )}
           />
           <Area type="monotone" dataKey="tvl" stroke="#10b981" strokeWidth={2} fill="url(#tvlGradient)" />
           <Area type="monotone" dataKey="volume" stroke="#0ea5e9" strokeWidth={1.5} fill="url(#volumeGradient)" />
@@ -125,8 +119,13 @@ export function AssetHistoryChart({ data, height = 180 }: AssetHistoryChartProps
           />
           <YAxis tick={{ fontSize: 10 }} stroke={axisStroke()} />
           <Tooltip
-            labelFormatter={(v) => new Date(String(v)).toLocaleString()}
-            contentStyle={tooltipStyle()}
+            content={(props) => (
+              <ChartTooltipBox
+                {...(props as unknown as ChartTooltipBoxProps)}
+                labelFormatter={(l) => new Date(String(l)).toLocaleString()}
+                valueFormatter={(v, name) => [fmtUsd(v, { compact: true }), name]}
+              />
+            )}
           />
           <Line type="monotone" dataKey="tvlUsd" stroke="#10b981" strokeWidth={2} dot={false} name="TVL" />
           <Line type="monotone" dataKey="price" stroke="#0ea5e9" strokeWidth={1.5} dot={false} name="Price" />

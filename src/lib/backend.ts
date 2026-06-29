@@ -136,7 +136,7 @@ async function getJson<T>(path: string, init?: RequestInit): Promise<T> {
 
 export const backend = {
   health() {
-    return getJson<{ status: string; ts: string }>("/api/health");
+    return getJson<{ status: string; ts: string; llmAvailable?: boolean; llmLabel?: string }>("/api/health");
   },
 
   refresh() {
@@ -171,7 +171,7 @@ export const backend = {
   },
 
   pools(limit = 50) {
-    return getJson<{ pools: Pool[]; total: number }>(`/api/pools?limit=${limit}`);
+    return getJson<{ pools: Pool[]; total: number; source?: string; live?: boolean }>(`/api/pools?limit=${limit}`);
   },
 
   poolDetail(address: string) {
