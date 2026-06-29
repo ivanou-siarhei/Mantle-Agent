@@ -1,55 +1,8 @@
-# === Windows System Files ===
-Thumbs.db
-Thumbs.db:encryptable
-ehthumbs.db
-ehthumbs_vista.db
-[Dd]esktop.ini
-$RECYCLE.BIN/
-*.stackdump
-*.lnk
-
-# === Windows Installer files ===
-*.cab
-*.msi
-*.msix
-*.msm
-*.msp
-
-# === macOS System Files ===
-.DS_Store
-.DS_Store?
-._*
-.Spotlight-V100
-.Trashes
-
-# === Temporary files and backups ===
-*.swp
-*.swo
-*.bak
-*.tmp
-*~
-*.pyc
-*.pyo
-
-# === Folders with build results and cache ===
-vendor/
-node_modules/
-build/
-dist/
-target/
-
-# === IDE and Editor configs ===
-.idea/
-.vscode/
-*.sublime-workspace
-*.sublime-project
-*.iml
-*.iws
-*.ipr
-workspace.xml
-
-# === vip files ===
-*.vip
-
+__pycache__/
+*.py[cod]
+*.egg-info/
+.venv/
+venv/
 .env
-.env.local
+digest.md
+.DS_Store

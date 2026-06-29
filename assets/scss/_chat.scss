@@ -1,0 +1,147 @@
+.agent-shell {
+  position: sticky;
+  top: 24px;
+  display: grid;
+  gap: 16px;
+}
+
+.agent-card {
+  overflow: hidden;
+  border-radius: 18px;
+  background: linear-gradient(180deg, var(--panel), var(--panel3));
+}
+
+.agent-head {
+  padding: 18px 18px 14px;
+  border-bottom: 1px solid var(--line);
+
+  h2 {
+    margin: 0;
+    font-size: 17px;
+  }
+
+  p {
+    margin: 8px 0 0;
+    color: var(--muted);
+    font-size: 13px;
+    line-height: 1.5;
+  }
+}
+
+.quick-actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  padding: 14px 18px;
+  border-bottom: 1px solid var(--line);
+}
+
+.quick-btn {
+  padding: 8px 10px;
+  border: 1px solid var(--line);
+  background: transparent;
+  color: var(--text);
+  cursor: pointer;
+  font-size: 12px;
+  transition: 0.18s ease;
+
+  &:hover {
+    border-color: rgba($accent, 0.32);
+    color: var(--accent);
+  }
+}
+
+.messages {
+  display: grid;
+  gap: 12px;
+  max-height: 460px;
+  overflow: auto;
+  padding: 16px 18px;
+  background: linear-gradient(180deg, rgba(255, 255, 255, 0.01), transparent);
+}
+
+.msg {
+  padding: 12px 13px;
+  border: 1px solid var(--line);
+  border-radius: 14px;
+  line-height: 1.55;
+
+  &.user {
+    border-color: rgba($mid, 0.18);
+    background: rgba($mid, 0.08);
+  }
+
+  &.agent {
+    background: rgba($accent, 0.05);
+  }
+
+  .role {
+    display: block;
+    margin-bottom: 6px;
+    color: var(--muted);
+    font-size: 11px;
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+  }
+
+  ul {
+    margin: 8px 0 0 18px;
+    padding: 0;
+  }
+}
+
+.composer {
+  display: grid;
+  gap: 12px;
+  padding: 16px 18px 18px;
+  border-top: 1px solid var(--line);
+
+  textarea {
+    width: 100%;
+    min-height: 104px;
+    resize: vertical;
+    padding: 14px 14px 12px;
+    border: 1px solid var(--line);
+    border-radius: 14px;
+    outline: none;
+    background: var(--panel2);
+    color: var(--text);
+
+    &:focus {
+      border-color: rgba($accent, 0.4);
+      box-shadow: 0 0 0 3px rgba($accent, 0.08);
+    }
+  }
+}
+
+.composer-bar {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 12px;
+}
+
+.composer-hint,
+.status {
+  color: var(--muted);
+  font-size: 12px;
+}
+
+.primary-btn {
+  padding: 11px 16px;
+  border: 0;
+  border-radius: 12px;
+  background: linear-gradient(135deg, var(--accent), $accent-dark);
+  color: #062b26;
+  cursor: pointer;
+  font-weight: 700;
+
+  &[disabled] {
+    cursor: progress;
+    opacity: 0.7;
+  }
+}
+
+.status {
+  padding: 0 18px 18px;
+}

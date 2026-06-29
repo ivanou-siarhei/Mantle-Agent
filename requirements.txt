@@ -1,0 +1,5 @@
+# No third-party dependencies — Python 3.10+ standard library only.
+# OpenAILLM talks to OpenAI-compatible endpoints via urllib (no SDK required).
+#
+# Optional, if you later prefer the official SDK instead of urllib:
+# openai>=1.0
