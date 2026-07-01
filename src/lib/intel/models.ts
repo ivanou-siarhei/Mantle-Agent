@@ -18,10 +18,6 @@ export interface Asset {
   healthScore: number; // 0-100
   growthScore: number; // 0-100
   discoveredAt: string;
-  // Tokenized equities trade via Atomic RFQ (xChange) on Fluxion — issuer-direct
-  // quotes, NOT AMM pools. These fields make the RFQ framing explicit.
-  venue?: string; // e.g. "Atomic RFQ (xChange)"
-  spreadBps?: number; // RFQ bid/ask spread in basis points
 }
 
 export interface Pool {
@@ -37,9 +33,6 @@ export interface Pool {
   healthScore: number; // 0-100
   feeEfficiency: number;
   discoveredAt: string;
-  // Provenance: real DefiLlama pool vs synthetic sample.
-  source?: string;
-  live?: boolean;
 }
 
 export type TradeKind = "swap" | "rfq" | "mint" | "burn" | "collect";

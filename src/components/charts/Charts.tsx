@@ -14,7 +14,6 @@ import {
 
 import type { Asset } from "@/lib/backend";
 import { fmtUsd } from "@/lib/format";
-import { ChartTooltipBox, type ChartTooltipBoxProps } from "./ChartTooltip";
 
 const PALETTE = ["#10b981", "#0ea5e9", "#f59e0b", "#8b5cf6", "#ec4899", "#14b8a6", "#f97316", "#6366f1", "#84cc16", "#06b6d4"];
 
@@ -25,6 +24,17 @@ const PALETTE = ["#10b981", "#0ea5e9", "#f59e0b", "#8b5cf6", "#ec4899", "#14b8a6
 function isDarkMode(): boolean {
   if (typeof document === "undefined") return false;
   return document.documentElement.classList.contains("dark");
+}
+
+function tooltipStyle(): React.CSSProperties {
+  const dark = isDarkMode();
+  return {
+    borderRadius: 8,
+    border: `1px solid ${dark ? "#3f3f46" : "#e4e4e7"}`,
+    background: dark ? "#18181b" : "#ffffff",
+    color: dark ? "#f4f4f5" : "#18181b",
+    fontSize: 12,
+  };
 }
 
 function axisStroke(): string {
@@ -66,16 +76,12 @@ export function EcosystemDonut({ assets }: EcosystemDonutProps) {
               ))}
             </Pie>
             <Tooltip
-              content={(props) => (
-                <ChartTooltipBox
-                  {...(props as unknown as ChartTooltipBoxProps)}
-                  valueFormatter={(v, _name, item) => {
-                    const pct = total > 0 ? (v / total) * 100 : 0;
-                    const symbol = (item.payload as { name?: string } | undefined)?.name ?? "";
-                    return [`${fmtUsd(v, { compact: true })} (${pct.toFixed(1)}%)`, symbol];
-                  }}
-                />
-              )}
+              formatter={(v: number, _name: string, entry: { payload?: { name?: string } } | undefined) => {
+                const pct = total > 0 ? (v / total) * 100 : 0;
+                const symbol = entry?.payload?.name ?? "";
+                return [`${fmtUsd(v, { compact: true })} (${pct.toFixed(1)}%)`, symbol];
+              }}
+              contentStyle={tooltipStyle()}
             />
           </PieChart>
         </ResponsiveContainer>
@@ -123,12 +129,8 @@ export function AssetBars({ assets }: AssetBarsProps) {
           <XAxis dataKey="name" tick={{ fontSize: 11 }} stroke={axisStroke()} />
           <YAxis tickFormatter={(v) => fmtUsd(Number(v), { compact: true })} tick={{ fontSize: 11 }} stroke={axisStroke()} />
           <Tooltip
-            content={(props) => (
-              <ChartTooltipBox
-                {...(props as unknown as ChartTooltipBoxProps)}
-                valueFormatter={(v, name) => [fmtUsd(v, { compact: true }), name]}
-              />
-            )}
+            formatter={(v: number) => fmtUsd(v, { compact: true })}
+            contentStyle={tooltipStyle()}
           />
           <Bar dataKey="tvl" fill="#10b981" radius={[4, 4, 0, 0]} />
           <Bar dataKey="volume" fill="#0ea5e9" radius={[4, 4, 0, 0]} />
@@ -161,13 +163,9 @@ export function HistoryChart({ data, color = "#10b981", height = 200, label }: H
           />
           <YAxis tick={{ fontSize: 10 }} stroke={axisStroke()} />
           <Tooltip
-            content={(props) => (
-              <ChartTooltipBox
-                {...(props as unknown as ChartTooltipBoxProps)}
-                labelFormatter={(l) => new Date(String(l)).toLocaleString()}
-                valueFormatter={(v) => [fmtUsd(v, { compact: true }), label ?? "value"]}
-              />
-            )}
+            labelFormatter={(v) => new Date(String(v)).toLocaleString()}
+            formatter={(v: number) => [fmtUsd(v, { compact: true }), label ?? "value"]}
+            contentStyle={tooltipStyle()}
           />
           <Bar dataKey="value" fill={color} radius={[2, 2, 0, 0]} />
         </BarChart>

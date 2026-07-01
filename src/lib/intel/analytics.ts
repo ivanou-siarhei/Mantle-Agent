@@ -210,11 +210,7 @@ export function computePoolMetrics(
     }
   }
 
-  // Live DefiLlama pools report a real (total) APY that may include reward APR
-  // beyond swap fees — preserve it. Synthetic pools recompute APR from fees.
-  const apr = pool.live
-    ? pool.apr
-    : pool.tvlUsd > 0 ? (pool.fees24h * 365) / pool.tvlUsd * 100 : 0;
+  const apr = pool.tvlUsd > 0 ? (pool.fees24h * 365) / pool.tvlUsd * 100 : 0;
   const health = poolHealthScore({
     tvlUsd: pool.tvlUsd,
     fees24h: pool.fees24h,
@@ -256,19 +252,9 @@ export function buildEcosystemSnapshot(
   pools: Pool[],
   trades: Trade[]
 ): EcosystemSnapshot {
-  // Ecosystem TVL / volume are the REAL on-chain AMM pool figures (Fluxion via
-  // DefiLlama when live). Equities trade via RFQ and are NOT pooled, so they
-  // are intentionally excluded from ecosystem TVL. Fall back to asset figures
-  // only if no pools are present.
-  const totalTvl = pools.length > 0
-    ? pools.reduce((s, p) => s + p.tvlUsd, 0)
-    : assets.reduce((s, a) => s + a.tvlUsd, 0);
-  const totalVolume = pools.length > 0
-    ? pools.reduce((s, p) => s + p.volume24h, 0)
-    : assets.reduce((s, a) => s + a.volume24h, 0);
-  const concentration = pools.length > 0
-    ? computeConcentration(pools.map((p) => p.tvlUsd))
-    : computeConcentration(assets.map((a) => a.tvlUsd));
+  const totalTvl = assets.reduce((s, a) => s + a.tvlUsd, 0);
+  const totalVolume = assets.reduce((s, a) => s + a.volume24h, 0);
+  const concentration = computeConcentration(assets.map((a) => a.tvlUsd));
 
   const buyVolume = new Map<string, number>();
   const sellVolume = new Map<string, number>();

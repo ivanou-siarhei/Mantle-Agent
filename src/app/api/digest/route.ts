@@ -15,7 +15,6 @@ export async function GET() {
       pools: cache.pools,
       narratives: cache.narratives,
       adapter: "SyntheticAdapter (sample data)",
-      poolSource: cache.poolSourceLabel,
       llm: llmLabel(),
       take: cache.narrativeBrief?.body,
     });

@@ -23,8 +23,6 @@ class IntelCache {
   opportunities: Opportunity[] = [];
   narratives: NarrativeStat[] = [];
   narrativeBrief: AIInsight | null = null;
-  sourceLabel: string = "SyntheticAdapter (sample data)";
-  poolSourceLabel: string = "SyntheticAdapter (sample data)";
   lastRefreshed: string | null = null;
 
   reset() {
@@ -35,8 +33,6 @@ class IntelCache {
     this.opportunities = [];
     this.narratives = [];
     this.narrativeBrief = null;
-    this.sourceLabel = "SyntheticAdapter (sample data)";
-    this.poolSourceLabel = "SyntheticAdapter (sample data)";
     this.lastRefreshed = null;
   }
 }
